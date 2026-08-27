@@ -1,6 +1,7 @@
 # Fantasy draft tool: data layer design
 
-Status: **awaiting approval** (Phase 1 gate). See `decisions.md` for the rulings
+Status: **built 2026-08-26** (design + Amendment 1 approved and implemented; see
+`next.md` for as-built numbers and deviations). `decisions.md` has the rulings
 behind every choice here.
 
 ## Purpose
