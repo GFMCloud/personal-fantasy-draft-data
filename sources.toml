@@ -1,0 +1,46 @@
+# Source registry. Disable any source by setting enabled = false; its columns
+# come out null and nothing else breaks. `make refresh-<name>` targets one source.
+
+[cache]
+# Skip re-fetch if the newest raw file for a source is younger than this.
+max_age_hours = 12
+
+[sources.nflverse]
+enabled = true
+season = 2025          # prior season for the stats block
+
+[sources.ffc]
+enabled = true
+formats = ["ppr", "half-ppr", "standard"]
+teams = 12
+year = 2026
+
+[sources.espn]
+enabled = true
+season = 2026
+unofficial = true      # undocumented endpoint; fails loudly, refresh continues
+
+[sources.sleeper]
+enabled = true
+trending_lookback_hours = 48
+
+[sources.harris]
+enabled = true
+positions = ["qb", "rb", "wr", "te"]
+
+[sources.dynastyprocess]
+enabled = true
+
+[sources.borischen]
+enabled = true
+formats = ["PPR", "HALF-PPR", ""]   # "" = standard in fftiers naming
+
+[sources.ffopportunity]
+enabled = true
+season = 2025
+
+[sources.ffc_boards]
+enabled = true
+formats = ["ppr", "half-ppr", "standard"]
+teams = 12
+boards_per_format = 100
