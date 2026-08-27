@@ -68,6 +68,7 @@ def _read(cfg: SourceConfig, ds: str) -> pd.DataFrame:
 
 def parse(cfg: SourceConfig) -> dict[str, pd.DataFrame]:
     players = _read(cfg, "players")
+    players.loc[players["position"] == "FB", "position"] = "RB"  # rankers list FBs as RB
     players = players[players["position"].isin(["QB", "RB", "WR", "TE", "K"])][
         ["gsis_id", "display_name", "position", "latest_team", "status",
          "draft_year", "draft_round", "draft_pick", "espn_id"]
