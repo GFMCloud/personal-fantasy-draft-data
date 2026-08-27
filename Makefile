@@ -1,4 +1,7 @@
-.PHONY: refresh validate test query lint $(addprefix refresh-,nflverse ffc espn sleeper harris dynastyprocess borischen ffopportunity ffc_boards)
+.PHONY: refresh validate test query lint board $(addprefix refresh-,nflverse ffc espn sleeper harris dynastyprocess borischen ffopportunity ffc_boards)
+
+board:
+	uv run python scripts/build_board.py
 
 refresh:
 	uv run draft-data refresh

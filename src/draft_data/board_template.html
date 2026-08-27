@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draft Board</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { interpolate-size: allow-keywords; }
+
+    html.theme-dark {
+      --bg: #0A0A0A; --surface: #141414; --surface-hover: #1C1C1C;
+      --border: rgba(255,255,255,0.06);
+      --text: #EDEDED; --text-secondary: #888;
+      --accent: #3b82f6; --accent-secondary: #8b5cf6;
+      --positive: #10b981; --negative: #f43f5e; --warning: #f59e0b;
+      /* position palette, dark steps (validated) */
+      --pos-qb: #D55E00; --pos-rb: #009E73; --pos-wr: #0072B2;
+      --pos-te: #B8860B; --pos-k: #C2649E; --pos-dst: #2E86C1;
+    }
+    html.theme-light {
+      --bg: #FAFAF9; --surface: #FFFFFF; --surface-hover: #F5F5F4;
+      --border: rgba(0,0,0,0.08);
+      --text: #0f172a; --text-secondary: #64748b;
+      --accent: #2563eb; --accent-secondary: #7c3aed;
+      --positive: #059669; --negative: #e11d48; --warning: #d97706;
+      /* position palette, light steps (validated) */
+      --pos-qb: #D55E00; --pos-rb: #009E73; --pos-wr: #0072B2;
+      --pos-te: #E69F00; --pos-k: #CC79A7; --pos-dst: #56B4E9;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+      letter-spacing: -0.01em; font-feature-settings: 'cv11','ss01','tnum';
+      transition: background 0.3s, color 0.3s; scrollbar-gutter: stable;
+    }
+    h1,h2,h3 { color: var(--text); letter-spacing: -0.03em; line-height: 1.08; text-wrap: balance; }
+    h1 { font-weight: 700; font-size: 2.5rem; }
+    h2 { font-weight: 600; font-size: 2rem; }
+    h3 { font-weight: 500; font-size: 1.5rem; }
+    p,li,td,th,span,label,button,input { color: var(--text); font-weight: 400; }
+    .text-secondary { color: var(--text-secondary); }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+            padding: 24px; transition: box-shadow 0.2s ease; }
+    .card:hover { box-shadow: 0 0 0 1px var(--border), 0 8px 16px rgba(0,0,0,0.08); }
+
+    @keyframes fadeInUp { from { opacity:0; transform: translateY(24px);} to { opacity:1; transform: translateY(0);} }
+    @keyframes fadeIn { from { opacity:0;} to { opacity:1;} }
+    .animate { animation: fadeInUp 0.6s ease-out both; }
+    .animate.delay-1 { animation-delay: 0.1s; } .animate.delay-2 { animation-delay: 0.2s; }
+    .animate.delay-3 { animation-delay: 0.3s; } .animate.delay-4 { animation-delay: 0.4s; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    @media print {
+      body { background: white !important; color: black !important; }
+      .viz-menu, .controls { display: none; }
+      .card { break-inside: avoid; border: 1px solid #ddd; box-shadow: none; }
+      * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      thead th { position: static !important; }
+    }
+    @page { margin: 0.5in; @bottom-center { content: "Page " counter(page); font-size: 9pt; color: #666; } }
+
+    .viz-menu { position: fixed; top: 16px; right: 16px; z-index: 9999; }
+    .viz-menu-toggle { width: 44px; height: 44px; border-radius: 12px; background: var(--surface);
+      border: 1px solid var(--border); color: var(--text); cursor: pointer; display: flex;
+      align-items: center; justify-content: center; backdrop-filter: blur(12px); transition: all 0.2s; }
+    .viz-menu-toggle:hover { background: var(--surface-hover); }
+    .viz-menu-dropdown { position: absolute; top: 52px; right: 0; min-width: 200px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px; padding: 8px; opacity: 0; visibility: hidden;
+      transform: translateY(-8px); transition: all 0.2s; backdrop-filter: blur(16px); }
+    .viz-menu-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .viz-menu-dropdown button { width: 100%; padding: 10px 14px; border: none; border-radius: 8px;
+      background: transparent; color: var(--text); font-size: 14px; font-family: inherit; cursor: pointer;
+      text-align: left; display: flex; align-items: center; gap: 10px; transition: background 0.15s; }
+    .viz-menu-dropdown button:hover { background: var(--surface-hover); }
+
+    .skip-to-content { position: absolute; top: -40px; left: 6px; background: var(--accent); color: white;
+      padding: 8px 12px; text-decoration: none; border-radius: 4px; opacity: 0; pointer-events: none;
+      transition: all 0.2s; z-index: 10000; }
+    .skip-to-content:focus { top: 6px; opacity: 1; pointer-events: auto; }
+
+    /* ===== BOARD ===== */
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 40px 24px 80px; }
+    header.board-head { margin-bottom: 48px; }
+    .sub { color: var(--text-secondary); font-size: 0.95rem; margin-top: 8px; }
+
+    .stats { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+             margin-bottom: 48px; }
+    .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+                  color: var(--text-secondary); margin-bottom: 6px; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; }
+    .stat-value.accent { color: var(--accent); }
+
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+    .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .seg button { padding: 8px 14px; background: var(--surface); border: none; cursor: pointer;
+                  font-family: inherit; font-size: 0.875rem; transition: background 0.15s; }
+    .seg button:hover { background: var(--surface-hover); }
+    .seg button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+    .search { flex: 1; min-width: 180px; max-width: 320px; padding: 9px 14px; border-radius: 8px;
+              border: 1px solid var(--border); background: var(--surface); font-family: inherit;
+              font-size: 0.9rem; }
+    .search:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+    .table-card { padding: 0; overflow: hidden; }
+    .table-scroll { overflow-x: auto; max-height: 78vh; overflow-y: auto; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+    thead th { position: sticky; top: 0; z-index: 2; background: var(--surface); text-align: right;
+               padding: 12px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+               color: var(--text-secondary); border-bottom: 1px solid var(--border); white-space: nowrap;
+               cursor: pointer; user-select: none; }
+    thead th.txt { text-align: left; }
+    thead th:hover { color: var(--text); background: var(--surface-hover); }
+    thead th .arrow { font-size: 0.7rem; opacity: 0.9; }
+    tbody td { padding: 9px 12px; text-align: right; border-bottom: 1px solid var(--border);
+               white-space: nowrap; }
+    tbody td.txt { text-align: left; }
+    tbody tr:hover { background: var(--surface-hover); }
+    tbody tr.tier-break td { border-top: 2px solid var(--text-secondary); }
+    .muted { color: var(--text-secondary); }
+    .sd { color: var(--text-secondary); font-size: 0.78rem; }
+
+    .pos { display: inline-flex; align-items: center; justify-content: center; min-width: 42px;
+           padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+           letter-spacing: 0.04em; color: #fff; }
+    .pos-QB { background: var(--pos-qb); } .pos-RB { background: var(--pos-rb); }
+    .pos-WR { background: var(--pos-wr); } .pos-TE { background: var(--pos-te); }
+    .pos-K  { background: var(--pos-k); }  .pos-DST{ background: var(--pos-dst); }
+
+    .keeper { color: var(--warning); font-size: 0.8rem; margin-left: 6px; }
+    .inj { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--negative);
+           margin-left: 6px; vertical-align: middle; }
+    .pname { font-weight: 500; }
+    .avail-hi { color: var(--positive); font-weight: 600; }
+    .avail-lo { color: var(--negative); }
+    .luck-pos { color: var(--positive); } .luck-neg { color: var(--negative); }
+
+    @media (max-width: 768px) { .wrap { padding: 24px 12px 60px; } h1 { font-size: 2rem; } }
+    @media (max-width: 375px) { body { overflow-x: hidden; } .stat-value { font-size: 1.6rem; } }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-to-content">Skip to content</a>
+
+  <div class="viz-menu">
+    <button class="viz-menu-toggle" onclick="toggleMenu()" aria-label="Menu">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="5" x2="17" y2="5"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="15" x2="17" y2="15"/>
+      </svg>
+    </button>
+    <div class="viz-menu-dropdown" id="vizMenuDropdown">
+      <button onclick="cycleTheme()"><span id="themeIcon">🌙</span><span id="themeLabel">Dark</span></button>
+      <button onclick="downloadImage()"><span>📥</span><span>Download PNG</span></button>
+      <button onclick="window.print()"><span>🖨️</span><span>Print / PDF</span></button>
+    </div>
+  </div>
+
+  <main id="main-content" role="main">
+    <div class="wrap">
+      <header class="board-head animate">
+        <h1>Draft Board</h1>
+        <p class="sub">__SUBTITLE__</p>
+      </header>
+
+      <section class="stats" aria-label="Board summary">
+        <div class="card animate delay-1"><div class="stat-label">Players on board</div>
+          <div class="stat-value accent" data-count="__N_PLAYERS__">0</div></div>
+        <div class="card animate delay-2"><div class="stat-label">Real drafts sampled</div>
+          <div class="stat-value" data-count="__N_DRAFTS__">0</div></div>
+        <div class="card animate delay-3"><div class="stat-label">Picks logged</div>
+          <div class="stat-value" data-count="__N_PICKS__">0</div></div>
+        <div class="card animate delay-4"><div class="stat-label">FFC ADP window ends</div>
+          <div class="stat-value" style="font-size:1.4rem">__ADP_END__</div></div>
+      </section>
+
+      <section aria-label="Board controls and table" class="animate delay-4">
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Scoring format" id="fmtSeg">
+            <button aria-pressed="true"  data-fmt="ppr">PPR</button>
+            <button aria-pressed="false" data-fmt="half">Half</button>
+            <button aria-pressed="false" data-fmt="std">Std</button>
+          </div>
+          <div class="seg" role="group" aria-label="Position filter" id="posSeg">
+            <button aria-pressed="true"  data-pos="ALL">All</button>
+            <button aria-pressed="false" data-pos="QB">QB</button>
+            <button aria-pressed="false" data-pos="RB">RB</button>
+            <button aria-pressed="false" data-pos="WR">WR</button>
+            <button aria-pressed="false" data-pos="TE">TE</button>
+            <button aria-pressed="false" data-pos="K">K</button>
+            <button aria-pressed="false" data-pos="DST">DST</button>
+          </div>
+          <input class="search" id="search" type="search" placeholder="Search player or team…"
+                 aria-label="Search player or team">
+        </div>
+
+        <div class="card table-card">
+          <div class="table-scroll" tabindex="0" aria-label="Draft board table, scrollable">
+            <table id="board" aria-describedby="main-content">
+              <thead><tr id="headRow"></tr></thead>
+              <tbody id="body"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="sub" style="margin-top:12px">
+          Availability %: share of __N_DRAFTS_FMT__ real FFC mock drafts (per format) in which the player
+          was still on the board at that pick. ⭐ = your keeper. Red dot = injury flag.
+          Luck = 2025 fantasy points minus expected points (ffopportunity); negative suggests positive regression.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // === Menu / theme / counters (skeleton) ===
+    function toggleMenu() {
+      var d = document.getElementById('vizMenuDropdown'); if (d) d.classList.toggle('open');
+    }
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.viz-menu')) {
+        var d = document.getElementById('vizMenuDropdown'); if (d) d.classList.remove('open');
+      }
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        var d = document.getElementById('vizMenuDropdown'); if (d) d.classList.remove('open');
+      }
+    });
+    var savedTheme = null;
+    try { savedTheme = localStorage.getItem('viz-theme'); } catch(e) {}
+    var currentTheme = savedTheme || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    function applyTheme(t) {
+      document.documentElement.className = 'theme-' + t;
+      document.getElementById('themeIcon').textContent = t === 'dark' ? '🌙' : '☀️';
+      document.getElementById('themeLabel').textContent = t === 'dark' ? 'Dark' : 'Light';
+      try { localStorage.setItem('viz-theme', t); } catch(e) {}
+      currentTheme = t;
+      if (typeof onThemeChange === 'function') onThemeChange();
+    }
+    function cycleTheme() { applyTheme(currentTheme === 'dark' ? 'light' : 'dark'); }
+    applyTheme(currentTheme);
+    function onThemeChange() {} // colors are CSS vars; nothing to re-render
+
+    function animateCounters() {
+      document.querySelectorAll('[data-count]').forEach(function(el) {
+        if (el.dataset.counted) return;
+        el.dataset.counted = '1';
+        var target = parseFloat(el.dataset.count), start = performance.now(), duration = 1200;
+        (function tick(now) {
+          var p = Math.min((now - start) / duration, 1), eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(target * eased).toLocaleString();
+          if (p < 1) requestAnimationFrame(tick);
+        })(start);
+      });
+    }
+    var counterEl = document.querySelector('[data-count]');
+    if (counterEl) {
+      var cObs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) { animateCounters(); cObs.disconnect(); } });
+      }, { threshold: 0.3 });
+      cObs.observe(counterEl);
+    }
+    async function downloadImage() {
+      var menu = document.querySelector('.viz-menu');
+      menu.style.display = 'none';
+      try {
+        var url = await htmlToImage.toPng(document.body, { quality: 1, pixelRatio: 2,
+          filter: function(n) { return !n.classList || !n.classList.contains('viz-menu'); } });
+        var a = document.createElement('a'); a.href = url;
+        a.download = 'draft-board.png'; a.click();
+      } catch(e) { console.error('Download failed:', e); }
+      menu.style.display = '';
+    }
+
+    // === Board data (embedded at generation time) ===
+    var DATA = __DATA__;
+    var DRAFTS_BY_FMT = __DRAFTS_BY_FMT__;
+
+    var state = { fmt: 'ppr', pos: 'ALL', q: '', sortKey: 'ecr', sortDir: 1 };
+
+    var COLS = [
+      { key: 'ecr',    label: 'ECR',      txt: false },
+      { key: 'name',   label: 'Player',   txt: true  },
+      { key: 'team',   label: 'Team',     txt: true  },
+      { key: 'pos',    label: 'Pos',      txt: true  },
+      { key: 'bye',    label: 'Bye',      txt: false },
+      { key: 'tier',   label: 'Tier',     txt: false },
+      { key: 'adp',    label: 'ADP (FFC)',txt: false },
+      { key: 'espn',   label: 'ESPN',     txt: false },
+      { key: 'harris', label: 'Harris',   txt: false },
+      { key: 'a24',    label: 'Avail@24', txt: false },
+      { key: 'a26',    label: 'Avail@26', txt: false },
+      { key: 'ppg',    label: "PPG '25",  txt: false },
+      { key: 'luck',   label: 'Luck',     txt: false },
+      { key: 'heat',   label: 'Heat',     txt: false }
+    ];
+
+    function val(p, key) {  // sortable value for a column under current format
+      var f = state.fmt;
+      switch (key) {
+        case 'name': return p.name.toLowerCase();
+        case 'team': return p.team || 'zz';
+        case 'pos':  return p.pos;
+        case 'bye':  return p.bye;
+        case 'ecr':  return p.ecr;
+        case 'tier': return p.tier[f];
+        case 'adp':  return p.adp[f] ? p.adp[f][0] : null;
+        case 'espn': return p.espn;
+        case 'harris': return f === 'std' ? p.harris.std : p.harris.ppr;
+        case 'a24':  return p.avail[f] ? p.avail[f][0] : null;
+        case 'a26':  return p.avail[f] ? p.avail[f][1] : null;
+        case 'ppg':  return p.ppg[f];
+        case 'luck': return p.luck;
+        case 'heat': return p.heat;
+      }
+      return null;
+    }
+    function fmtNum(v, dp) { return v == null ? '<span class="muted">–</span>' : v.toFixed(dp == null ? 1 : dp); }
+
+    function render() {
+      var f = state.fmt;
+      var head = document.getElementById('headRow');
+      head.innerHTML = COLS.map(function(c) {
+        var arrow = state.sortKey === c.key ? ' <span class="arrow">' + (state.sortDir === 1 ? '▲' : '▼') + '</span>' : '';
+        var sorted = state.sortKey === c.key ? (state.sortDir === 1 ? 'ascending' : 'descending') : 'none';
+        return '<th class="' + (c.txt ? 'txt' : '') + '" data-key="' + c.key + '" role="columnheader" aria-sort="' + sorted + '" tabindex="0">' + c.label + arrow + '</th>';
+      }).join('');
+
+      var rows = DATA.filter(function(p) {
+        if (state.pos !== 'ALL' && p.pos !== state.pos) return false;
+        if (state.q && (p.name + ' ' + (p.team || '')).toLowerCase().indexOf(state.q) === -1) return false;
+        return true;
+      });
+      rows.sort(function(a, b) {
+        var va = val(a, state.sortKey), vb = val(b, state.sortKey);
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1;   // nulls always last
+        if (vb == null) return -1;
+        return va < vb ? -state.sortDir : va > vb ? state.sortDir : 0;
+      });
+
+      var tierSorted = state.sortKey === 'ecr' || state.sortKey === 'tier';
+      var prevTier = null;
+      var html = rows.map(function(p) {
+        var t = p.tier[f];
+        var brk = tierSorted && t != null && prevTier != null && t !== prevTier;
+        if (t != null) prevTier = t;
+        var a24 = p.avail[f] ? p.avail[f][0] : null, a26 = p.avail[f] ? p.avail[f][1] : null;
+        var availCls = function(v) { return v == null ? '' : v >= 60 ? 'avail-hi' : v <= 25 ? 'avail-lo' : ''; };
+        var luckCls = p.luck == null ? '' : p.luck < 0 ? 'luck-pos' : 'luck-neg';
+        return '<tr' + (brk ? ' class="tier-break"' : '') + '>'
+          + '<td>' + fmtNum(p.ecr) + (p.ecr_sd != null ? ' <span class="sd">±' + p.ecr_sd.toFixed(1) + '</span>' : '') + '</td>'
+          + '<td class="txt"><span class="pname">' + p.name + '</span>'
+            + (p.keeper ? '<span class="keeper" title="Your keeper">⭐</span>' : '')
+            + (p.inj ? '<span class="inj" title="' + p.inj + '"></span>' : '') + '</td>'
+          + '<td class="txt">' + (p.team || '<span class="muted">FA</span>') + '</td>'
+          + '<td class="txt"><span class="pos pos-' + p.pos + '">' + p.pos + '</span></td>'
+          + '<td>' + (p.bye == null ? '<span class="muted">–</span>' : p.bye) + '</td>'
+          + '<td>' + (t == null ? '<span class="muted">–</span>' : t) + '</td>'
+          + '<td>' + (p.adp[f] ? p.adp[f][0].toFixed(1) + (p.adp[f][1] != null ? ' <span class="sd">±' + p.adp[f][1].toFixed(1) + '</span>' : '') : '<span class="muted">–</span>') + '</td>'
+          + '<td>' + fmtNum(p.espn) + '</td>'
+          + '<td>' + fmtNum(f === 'std' ? p.harris.std : p.harris.ppr, 0) + '</td>'
+          + '<td class="' + availCls(a24) + '">' + (a24 == null ? '<span class="muted">–</span>' : a24.toFixed(0) + '%') + '</td>'
+          + '<td class="' + availCls(a26) + '">' + (a26 == null ? '<span class="muted">–</span>' : a26.toFixed(0) + '%') + '</td>'
+          + '<td>' + fmtNum(p.ppg[f]) + '</td>'
+          + '<td class="' + luckCls + '">' + fmtNum(p.luck) + '</td>'
+          + '<td>' + (p.heat == null ? '<span class="muted">–</span>' : p.heat.toLocaleString()) + '</td>'
+          + '</tr>';
+      }).join('');
+      document.getElementById('body').innerHTML = html;
+    }
+
+    document.getElementById('headRow').addEventListener('click', headerSort);
+    document.getElementById('headRow').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { headerSort(e); e.preventDefault(); }
+    });
+    function headerSort(e) {
+      var th = e.target.closest('th'); if (!th) return;
+      var key = th.dataset.key;
+      if (state.sortKey === key) { state.sortDir = -state.sortDir; }
+      else { state.sortKey = key; state.sortDir = 1; }
+      render();
+    }
+    document.getElementById('fmtSeg').addEventListener('click', function(e) {
+      var b = e.target.closest('button'); if (!b) return;
+      state.fmt = b.dataset.fmt;
+      this.querySelectorAll('button').forEach(function(x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      render();
+    });
+    document.getElementById('posSeg').addEventListener('click', function(e) {
+      var b = e.target.closest('button'); if (!b) return;
+      state.pos = b.dataset.pos;
+      this.querySelectorAll('button').forEach(function(x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      render();
+    });
+    document.getElementById('search').addEventListener('input', function() {
+      state.q = this.value.trim().toLowerCase(); render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
