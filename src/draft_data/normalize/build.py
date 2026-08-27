@@ -4,7 +4,7 @@ id_match_review.csv, league.json, meta.json."""
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 
@@ -158,11 +158,10 @@ def build_outputs(cfg: Config) -> None:
     master = master[has_signal | played_2025].copy()
 
     # --- Staleness stamps ---
-    from draft_data.cache import newest
     for sc in cfg.enabled_sources():
         files = sorted(sc.raw_dir.glob("*"))
         if files:
-            ts = datetime.fromtimestamp(max(f.stat().st_mtime for f in files), timezone.utc)
+            ts = datetime.fromtimestamp(max(f.stat().st_mtime for f in files), UTC)
             master[f"fetched_at_{sc.name}"] = ts.isoformat(timespec="seconds")
 
     dup = master["player_id"].duplicated().sum()
@@ -190,7 +189,7 @@ def build_outputs(cfg: Config) -> None:
     }
     (PROCESSED_DIR / "league.json").write_text(json.dumps(league, indent=2))
 
-    meta = {"built_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    meta = {"built_at": datetime.now(UTC).isoformat(timespec="seconds")}
     if ffc_meta is not None:
         meta["ffc_adp_windows"] = ffc_meta.to_dict(orient="records")
     (PROCESSED_DIR / "meta.json").write_text(json.dumps(meta, indent=2))

@@ -21,7 +21,7 @@ def run_refresh(source: str | None = None, force: bool = False, build: bool = Tr
         try:
             paths = get_module(name).fetch(sc, cfg.max_age_hours, force=force)
             print(f"[{name}] fetched: {len(paths)} raw file(s)")
-        except Exception:
+        except Exception:  # noqa: BLE001 -- one broken source must not kill the refresh
             print(f"[{name}] FAILED (continuing with other sources)")
             traceback.print_exc()
             failed.append(name)
