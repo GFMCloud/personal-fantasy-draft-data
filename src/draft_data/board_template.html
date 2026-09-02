@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Draft Board</title>
+  <title>__TITLE__</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
@@ -166,7 +166,7 @@
   <main id="main-content" role="main">
     <div class="wrap">
       <header class="board-head animate">
-        <h1>Draft Board</h1>
+        <h1>__TITLE__</h1>
         <p class="sub">__SUBTITLE__</p>
       </header>
 
@@ -211,7 +211,7 @@
         </div>
         <p class="sub" style="margin-top:12px">
           Availability %: share of __N_DRAFTS_FMT__ real FFC mock drafts (per format) in which the player
-          was still on the board at that pick. ⭐ = your keeper. Red dot = injury flag.
+          was still on the board at picks __AVAIL_A__ and __AVAIL_B__. ⭐ = your keeper. Red dot = injury flag.
           Luck = 2025 fantasy points minus expected points (ffopportunity); negative suggests positive regression.
         </p>
       </section>
@@ -274,7 +274,7 @@
         var url = await htmlToImage.toPng(document.body, { quality: 1, pixelRatio: 2,
           filter: function(n) { return !n.classList || !n.classList.contains('viz-menu'); } });
         var a = document.createElement('a'); a.href = url;
-        a.download = 'draft-board.png'; a.click();
+        a.download = '__SLUG__.png'; a.click();
       } catch(e) { console.error('Download failed:', e); }
       menu.style.display = '';
     }
@@ -283,7 +283,10 @@
     var DATA = __DATA__;
     var DRAFTS_BY_FMT = __DRAFTS_BY_FMT__;
 
-    var state = { fmt: 'ppr', pos: 'ALL', q: '', sortKey: 'ecr', sortDir: 1 };
+    var state = { fmt: '__FMT_DEFAULT__', pos: 'ALL', q: '', sortKey: 'ecr', sortDir: 1 };
+    document.querySelectorAll('#fmtSeg button').forEach(function(b) {
+      b.setAttribute('aria-pressed', b.dataset.fmt === state.fmt ? 'true' : 'false');
+    });
 
     var COLS = [
       { key: 'ecr',    label: 'ECR',      txt: false },
@@ -295,8 +298,8 @@
       { key: 'adp',    label: 'ADP (FFC)',txt: false },
       { key: 'espn',   label: 'ESPN',     txt: false },
       { key: 'harris', label: 'Harris',   txt: false },
-      { key: 'a24',    label: 'Avail@24', txt: false },
-      { key: 'a26',    label: 'Avail@26', txt: false },
+      { key: 'a24',    label: 'Avail@__AVAIL_A__', txt: false },
+      { key: 'a26',    label: 'Avail@__AVAIL_B__', txt: false },
       { key: 'ppg',    label: "PPG '25",  txt: false },
       { key: 'luck',   label: 'Luck',     txt: false },
       { key: 'heat',   label: 'Heat',     txt: false }

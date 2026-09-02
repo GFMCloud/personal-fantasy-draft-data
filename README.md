@@ -16,7 +16,7 @@ make refresh            # fetch all enabled sources + rebuild outputs
 make validate           # schema, null, and sanity checks
 make query SQL="SELECT name, ecr FROM players ORDER BY ecr LIMIT 10"
 make test               # unit tests
-make board              # regenerate data/processed/board.html (sortable board view)
+make board              # regenerate data/processed/board.html + board_<slug>.html per leagues/*.json
 ```
 
 No API keys required; every enabled source is free. Sources are toggled in
